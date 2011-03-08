@@ -263,6 +263,13 @@ static __inline__ int abortboot(int bootdelay)
 # endif	/* CONFIG_AUTOBOOT_KEYED */
 #endif	/* CONFIG_BOOTDELAY >= 0  */
 
+int _abortboot(int bootdelay)
+{
+#if defined(CONFIG_BOOTDELAY) && (CONFIG_BOOTDELAY >= 0)
+	return abortboot(bootdelay);
+#endif
+}
+
 /****************************************************************************/
 
 void main_loop (void)
