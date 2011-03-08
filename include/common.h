@@ -234,6 +234,7 @@ int	readline_into_buffer	(const char *const prompt, char * buffer);
 int	parse_line (char *, char *[]);
 void	init_cmd_timeout(void);
 void	reset_cmd_timeout(void);
+int	_abortboot(int bootdelay);
 
 /* arch/$(ARCH)/lib/board.c */
 void	board_init_f  (ulong) __attribute__ ((noreturn));
