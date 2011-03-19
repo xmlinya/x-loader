@@ -252,4 +252,7 @@
 #define CONFIG_VIDEO_LOGO
 #define CONFIG_IPUV3_CLK	133000000
 
+/* Erratum */
+#define CONFIG_SYS_FSL_ERRATUM_ESDHC111
+
 #endif				/* __CONFIG_H */
