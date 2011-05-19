@@ -177,6 +177,10 @@
 				"run mmcboot; " \
 			"fi; " \
 		"fi; " \
+	"fi; " \
+	"if usb start; then " \
+		"bootp; "\
+		"source ${loadaddr};" \
 	"fi"
 
 #define CONFIG_AUTO_COMPLETE		1
