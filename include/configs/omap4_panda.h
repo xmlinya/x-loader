@@ -132,6 +132,7 @@
 #define CONFIG_NET_MULTI		1
 #define CONFIG_CMD_PING			1
 #define CONFIG_CMD_DHCP			1
+#define CONFIG_CMD_PXECFG		1
 #define CONFIG_BOOTFILE			"uImage"
 
 /* Flash */
