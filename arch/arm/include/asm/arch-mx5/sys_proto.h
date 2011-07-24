@@ -27,6 +27,8 @@
 u32 get_cpu_rev(void);
 #define is_soc_rev(rev)	((get_cpu_rev() & 0xFF) - rev)
 void sdelay(unsigned long);
+void pmic_reg_write(u32 reg, u32 value);
+u32 pmic_reg_read(u32 reg);
 void set_chipselect_size(int const);
 
 /*
