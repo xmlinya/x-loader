@@ -180,6 +180,12 @@
 				"run mmcboot; " \
 			"fi; " \
 		"fi; " \
+	"fi; " \
+	"if usb start; then " \
+		"set autoload no; "\
+		"bootp; "\
+		"pxe get;" \
+		"pxe boot;" \
 	"fi"
 
 #define CONFIG_AUTO_COMPLETE		1
