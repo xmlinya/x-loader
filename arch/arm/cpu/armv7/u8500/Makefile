@@ -25,7 +25,14 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(SOC).o
 
-COBJS	= timer.o clock.o
+
+COBJS  += clock.o
+COBJS  += cpu.o
+#COBJS  += interrupts.o
+COBJS  += prcmu.o
+COBJS  += timer.o
+
+#COBJS	= timer.o clock.o prcmu.o
 SOBJS	= lowlevel.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
