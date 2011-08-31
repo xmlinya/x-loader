@@ -78,6 +78,13 @@ int cleanup_before_linux(void)
 	 * problems for kernel
 	 */
 	invalidate_dcache_all();
-
+#ifdef CONFIG_U8500
+	/* Clean l2 */
+	*((volatile unsigned int *)(0xA04127BC)) = 0xFF;
+	while (*((volatile unsigned int *)(0xA04127BC)) & 0xFF);
+	/* Invalidate l2 */
+	*((volatile unsigned int *)(0xA041277C)) = 0xFF;
+	while (*((volatile unsigned int *)(0xA041277C)) & 0xFF);
+#endif
 	return 0;
 }
