@@ -40,6 +40,7 @@ static int mmc_read_data(hsmmc_t *mmc_base, char *buf, unsigned int size);
 static int mmc_write_data(hsmmc_t *mmc_base, const char *buf, unsigned int siz);
 static struct mmc hsmmc_dev[2];
 
+#if defined(CONFIG_OMAP44XX) && defined(CONFIG_TWL6030_POWER)
 unsigned char omap4_vmmc_pbias_config(struct mmc *mmc)
 {
 	u32 value = 0;
@@ -53,6 +54,7 @@ unsigned char omap4_vmmc_pbias_config(struct mmc *mmc)
 	value |= (1 << 21) | (1 << 22) | (1 << 26);
 	writel(value, CONTROL_PBIASLITE);
 }
+#endif
 
 unsigned char mmc_board_init(struct mmc *mmc)
 {
