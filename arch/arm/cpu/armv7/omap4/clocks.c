@@ -280,7 +280,12 @@ void scale_vcores(void)
 	omap_rev = omap_revision();
 	/* TPS - supplies vdd_mpu on 4460 */
 	if (omap_rev >= OMAP4460_ES1_0) {
+		/*
+		 * Setup SET1 and SET0 with right values so that kernel
+		 * can use either of them based on its needs.
+		 */
 		volt = 1313;
+		do_scale_tps62361(TPS62361_REG_ADDR_SET0, volt);
 		do_scale_tps62361(TPS62361_REG_ADDR_SET1, volt);
 	}
 
