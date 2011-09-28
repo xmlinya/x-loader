@@ -271,7 +271,11 @@
 /* Defines for SPL */
 #define CONFIG_SPL
 #define CONFIG_SPL_TEXT_BASE		0x40304350
-#define CONFIG_SPL_MAX_SIZE		(38 * 1024)
+/*
+ * 32k is the maximum public SRAM available in case of HS devices.
+ * Use the same in both HS/GP to maintain compatability.
+ */
+#define CONFIG_SPL_MAX_SIZE		(32 * 1024)
 #define CONFIG_SPL_STACK		LOW_LEVEL_SRAM_STACK
 
 #define CONFIG_SPL_BSS_START_ADDR	0x80000000
