@@ -167,8 +167,7 @@ int i2c_probe(uchar chip)
 {
 	int ret;
 
-	writew(0, I2C_BASE + I2CR); /* Reset module */
-	writew(I2CR_IEN, I2C_BASE + I2CR);
+	i2c_reset();
 
 	writew(I2CR_IEN |  I2CR_MSTA | I2CR_MTX, I2C_BASE + I2CR);
 	ret = tx_byte(chip << 1);
