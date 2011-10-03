@@ -362,21 +362,48 @@ static void clock_init(void)
 		printf("CPU:   Switch DDR clock to 1GHZ failed\n");
 }
 
+static int pmic_mc34708 = 0;
+
 static void power_init(void)
 {
 	unsigned int val;
+	unsigned char buf[4] = { 0, 0, 0, 0 };
 
-	/* Set VDDA to 1.25V */
-	val = DA9052_BUCKCORE_BCOREEN;
-	val |= DA_BUCKCORE_VBCORE_1_250V;
-	pmic_reg_write(DA9053_BUCKCORE_REG, val);
-	val = pmic_reg_read(DA9053_SUPPLY_REG);
-	val |= DA9052_SUPPLY_VBCOREGO;
-	pmic_reg_write(DA9053_SUPPLY_REG, val);
+	if (i2c_probe(0x08) == 0)
+		pmic_mc34708 = 1;
 
-	/* Set Vcc peripheral to 1.35V */
-	pmic_reg_write(0x2f, 0x62);
-	pmic_reg_write(0x3c, 0x62);
+	if (pmic_mc34708) {
+		i2c_read(0x8, 24, 1, &buf[0], 3);
+
+		/* increase VDDGP as 1.25V for 1GHZ on SW1 */
+		buf[2] = 0x30;
+		i2c_write(0x8, 24, 1, buf, 3);
+
+		i2c_read(0x8, 25, 1, &buf[0], 3);
+
+		/* increase VCC as 1.3V on SW2 */
+		buf[2] = 0x34;
+		i2c_write(0x8, 25, 1, buf, 3);
+
+		/*change global reset time as 4s*/
+		i2c_read(0x8, 15, 1, &buf[0], 3);
+
+		buf[1] |= 0x1;
+		buf[1] &= ~0x2;
+		i2c_write(0x8, 15, 1, buf, 3);
+	} else {
+		/* Set VDDA to 1.25V */
+		val = DA9052_BUCKCORE_BCOREEN;
+		val |= DA_BUCKCORE_VBCORE_1_250V;
+		pmic_reg_write(DA9053_BUCKCORE_REG, val);
+		val = pmic_reg_read(DA9053_SUPPLY_REG);
+		val |= DA9052_SUPPLY_VBCOREGO;
+		pmic_reg_write(DA9053_SUPPLY_REG, val);
+
+		/* Set Vcc peripheral to 1.35V */
+		pmic_reg_write(0x2f, 0x62);
+		pmic_reg_write(0x3c, 0x62);
+	}
 }
 
 int board_early_init_f(void)
@@ -401,7 +428,11 @@ int board_init(void)
 
 int checkboard(void)
 {
-	puts("Board: MX53 LOCO\n");
+	puts("Board: MX53 LOCO");
 
+	if (pmic_mc34708)
+		puts(" with MC34708");
+
+	puts("\n");
 	return 0;
 }
