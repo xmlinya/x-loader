@@ -54,6 +54,7 @@ void preloader_console_init(void);
 #define BOOT_DEVICE_ONE_NAND	4
 #define BOOT_DEVICE_MMC1	5
 #define BOOT_DEVICE_MMC2	6
+#define BOOT_DEVICE_USB		69	/* usb peripheral that is */
 #elif defined(CONFIG_OMAP34XX)	/* OMAP3 */
 #define BOOT_DEVICE_NONE	0
 #define BOOT_DEVICE_XIP		1
@@ -103,6 +104,10 @@ void spl_mmc_load_image(void);
 
 /* YMODEM SPL functions */
 void spl_ymodem_load_image(void);
+
+/* USB SPL functions */
+void spl_dsu_load_image(void);
+int dsudownload(u32 *, u32 *);
 
 #ifdef CONFIG_SPL_BOARD_INIT
 void spl_board_init(void);
