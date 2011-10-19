@@ -46,6 +46,8 @@ LIBS-$(CONFIG_SPL_SPI_FLASH_SUPPORT) += drivers/mtd/spi/libspi_flash.o
 LIBS-$(CONFIG_SPL_SPI_SUPPORT) += drivers/spi/libspi.o
 LIBS-$(CONFIG_SPL_FAT_SUPPORT) += fs/fat/libfat.o
 LIBS-$(CONFIG_SPL_LIBGENERIC_SUPPORT) += lib/libgeneric.o
+LIBS-$(CONFIG_SPL_USB_SUPPORT) += drivers/usb/gadget/libusb_gadget.o
+LIBS-$(CONFIG_SPL_MUSB_SUPPORT) += drivers/usb/musb/libusb_musb.o
 
 ifeq ($(SOC),omap3)
 LIBS-y += $(CPUDIR)/omap-common/libomap-common.o

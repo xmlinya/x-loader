@@ -44,6 +44,7 @@ void preloader_console_init(void);
 #define BOOT_DEVICE_ONE_NAND	4
 #define BOOT_DEVICE_MMC1	5
 #define BOOT_DEVICE_MMC2	6
+#define BOOT_DEVICE_USB		69	/* usb gadget that is */
 
 /* Boot type */
 #define	MMCSD_MODE_UNDEFINED	0

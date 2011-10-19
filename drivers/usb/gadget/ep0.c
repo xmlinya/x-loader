@@ -198,7 +198,7 @@ static int ep0_get_descriptor (struct usb_device_instance *device,
 	urb->actual_length = 0;
 	cp = (char*)urb->buffer;
 
-	dbg_ep0 (2, "%s", USBD_DEVICE_DESCRIPTORS (descriptor_type));
+	//dbg_ep0 (2, "%s", USBD_DEVICE_DESCRIPTORS (descriptor_type));
 
 	switch (descriptor_type) {
 	case USB_DESCRIPTOR_TYPE_DEVICE:
@@ -266,7 +266,7 @@ static int ep0_get_descriptor (struct usb_device_instance *device,
 				serial_printf("Invalid string index %d\n", index);
 				return -1;
 			}
-			dbg_ep0(3, "string_descriptor: %p length %d", string_descriptor, string_descriptor->bLength);
+			/*dbg_ep0(3, "string_descriptor: %p length %d", string_descriptor, string_descriptor->bLength); */
 			copy_config (urb, string_descriptor, string_descriptor->bLength, max);
 		}
 		break;
