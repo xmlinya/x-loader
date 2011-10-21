@@ -141,6 +141,7 @@ end:
 	}
 }
 
+#ifdef CONFIG_SPL_MMC_SUPPORT
 static void mmc_load_image_fat(struct mmc *mmc)
 {
 	s32 err;
@@ -215,6 +216,7 @@ static void mmc_load_image(void)
 		hang();
 	}
 }
+#endif
 
 void jump_to_image_no_args(void)
 {
@@ -237,10 +239,12 @@ void board_init_r(gd_t *id, ulong dummy)
 	boot_device = omap_boot_device();
 	debug("boot device - %d\n", boot_device);
 	switch (boot_device) {
+#ifdef CONFIG_SPL_MMC_SUPPORT
 	case BOOT_DEVICE_MMC1:
 	case BOOT_DEVICE_MMC2:
 		mmc_load_image();
 		break;
+#endif
 	default:
 		printf("SPL: Un-supported Boot Device - %d!!!\n", boot_device);
 		hang();
