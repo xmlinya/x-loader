@@ -83,6 +83,7 @@ end:
 	}
 }
 
+#ifdef CONFIG_SPL_MMC_SUPPORT
 static void mmc_load_image_fat(struct mmc *mmc)
 {
 	s32 err;
@@ -155,3 +156,4 @@ void spl_mmc_load_image(void)
 		hang();
 	}
 }
+#endif
