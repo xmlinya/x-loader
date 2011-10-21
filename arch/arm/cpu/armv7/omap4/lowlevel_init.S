@@ -51,7 +51,13 @@ save_boot_params:
 
 	/* Store the boot mode (raw/FAT) in omap4_boot_mode */
 	ldr	r2, [r0, #DEV_DESC_PTR_OFFSET]	@ get the device descriptor ptr
+	bic	r3, r2, #255
+	cmp	r3, #0
+	beq	1f
 	ldr	r2, [r2, #DEV_DATA_PTR_OFFSET]	@ get the pDeviceData ptr
+	bic	r3, r2, #255
+	cmp	r3, #0
+	beq	1f
 	ldr	r2, [r2, #BOOT_MODE_OFFSET]	@ get the boot mode
 	ldr	r3, =omap4_boot_mode
 	str	r2, [r3]
