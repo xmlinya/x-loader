@@ -66,5 +66,6 @@ void make_cs1_contiguous(void);
 void omap_nand_switch_ecc(int);
 void power_init_r(void);
 void dieid_num_r(void);
+void omap3_die_id_to_ethernet_mac(u8 *, int);
 
 #endif
