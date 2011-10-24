@@ -63,6 +63,19 @@
 #define CONFIG_MII
 #define CONFIG_DISCOVER_PHY
 
+/* BOOTP options */
+#define CONFIG_BOOTP_BOOTFILESIZE
+#define CONFIG_BOOTP_BOOTPATH
+#define CONFIG_BOOTP_GATEWAY
+#define CONFIG_BOOTP_HOSTNAME
+
+/* PXE */
+#define CONFIG_CMD_PXE
+#define CONFIG_MENU
+#define CONFIG_BOOTP_PXE
+#define CONFIG_BOOTP_PXE_CLIENTARCH	0x100
+#define CONFIG_BOOTP_VCI_STRING		"U-boot.armv7.mx53_loco"
+
 #define CONFIG_FEC_MXC
 #define IMX_FEC_BASE	FEC_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR	0x1F
@@ -121,12 +134,21 @@
 	"mmcboot=echo Booting from mmc ...; " \
 		"run mmcargs; " \
 		"bootm\0" \
+	"pxeboot=echo Booting from net via PXE ...; " \
+		"setenv autoload no; " \
+		" bootp; " \
+		"if pxe get; then " \
+			"pxe boot;" \
+		"fi;\0" \
 	"netargs=setenv bootargs console=ttymxc0,${baudrate} " \
 		"root=/dev/nfs " \
 		"ip=dhcp nfsroot=${serverip}:${nfsroot},v3,tcp\0" \
 	"netboot=echo Booting from net ...; " \
 		"run netargs; " \
 		"dhcp ${uimage}; bootm\0" \
+	"kernel_addr_r=0x88000000\0" \
+	"ramdisk_addr_r=0x81600000\0" \
+	"pxefile_addr_r=0x86000000\0"
 
 #define CONFIG_BOOTCOMMAND \
 	"if mmc rescan ${mmcdev}; then " \
@@ -138,7 +160,9 @@
 			"else run netboot; " \
 			"fi; " \
 		"fi; " \
-	"else run netboot; fi"
+	"fi; " \
+	"run pxeboot; " \
+	"run netboot; "
 
 #define CONFIG_ARP_TIMEOUT	200UL
 
