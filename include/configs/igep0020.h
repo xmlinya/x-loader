@@ -169,6 +169,9 @@
 		"run nandargs; " \
 		"onenand read ${loadaddr} 280000 400000; " \
 		"bootm ${loadaddr}\0" \
+	"kernel_addr_r=0x88000000\0" \
+	"ramdisk_addr_r=0x81600000\0" \
+	"pxefile_addr_r=0x86000000\0"
 
 #define CONFIG_BOOTCOMMAND \
 	"if mmc rescan ${mmcdev}; then " \
@@ -180,7 +183,13 @@
 			"else run nandboot; " \
 			"fi; " \
 		"fi; " \
-	"else run nandboot; fi"
+	"fi; " \
+	"setenv autoload no; "\
+	"bootp; " \
+	"if pxe get; then " \
+		"pxe boot;" \
+	"fi;" \
+	"run nandboot;" \
 
 #define CONFIG_AUTO_COMPLETE		1
 
@@ -260,6 +269,20 @@
 #define CONFIG_SMC911X
 #define CONFIG_SMC911X_32_BIT
 #define CONFIG_SMC911X_BASE	0x2C000000
+
+/* BOOTP options */
+#define CONFIG_BOOTP_BOOTFILESIZE
+#define CONFIG_BOOTP_BOOTPATH
+#define CONFIG_BOOTP_GATEWAY
+#define CONFIG_BOOTP_HOSTNAME
+
+/* PXE */
+#define CONFIG_CMD_PXE
+#define CONFIG_MENU
+#define CONFIG_BOOTP_PXE
+#define CONFIG_BOOTP_PXE_CLIENTARCH	0x100
+#define CONFIG_BOOTP_VCI_STRING		"U-boot.armv7.omap3_igep0020"
+
 #endif /* (CONFIG_CMD_NET) */
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
