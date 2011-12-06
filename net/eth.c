@@ -62,6 +62,15 @@ int eth_getenv_enetaddr_by_index(const char *base_name, int index,
 	return eth_getenv_enetaddr(enetvar, enetaddr);
 }
 
+int eth_setenv_enetaddr_by_index(const char *base_name, int index,
+				 uchar *enetaddr)
+{
+	char enetvar[32];
+	sprintf(enetvar, index ? "%s%daddr" : "%saddr", base_name, index);
+	return eth_setenv_enetaddr(enetvar, enetaddr);
+}
+
+
 static int eth_mac_skip(int index)
 {
 	char enetvar[15];
@@ -190,8 +199,13 @@ int eth_write_hwaddr(struct eth_device *dev, const char *base_name,
 	unsigned char env_enetaddr[6];
 	int ret = 0;
 
-	eth_getenv_enetaddr_by_index(base_name, eth_number, env_enetaddr);
-
+	if (!eth_getenv_enetaddr_by_index(base_name, eth_number, env_enetaddr)) {
+		if (!is_valid_ether_addr(dev->enetaddr))
+			return -1;
+		eth_setenv_enetaddr_by_index(base_name, eth_number,
+					     dev->enetaddr);
+		memcpy(env_enetaddr, dev->enetaddr, 6);
+	}
 	if (memcmp(env_enetaddr, "\0\0\0\0\0\0", 6)) {
 		if (memcmp(dev->enetaddr, "\0\0\0\0\0\0", 6) &&
 			memcmp(dev->enetaddr, env_enetaddr, 6)) {
