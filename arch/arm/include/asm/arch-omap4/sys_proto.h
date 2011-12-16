@@ -55,6 +55,8 @@ u32 omap_sdram_size(void);
 u32 cortex_rev(void);
 void init_omap_revision(void);
 void do_io_settings(void);
+void omap4_die_id_to_ethernet_mac(u8 *, int);
+
 /*
  * This is used to verify if the configuration header
  * was executed by Romcode prior to control of transfer
