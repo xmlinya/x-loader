@@ -106,29 +106,6 @@ static void jump_to_image_no_args(void)
 	image_entry((u32 *)boot_params_ptr_addr);
 }
 
-#ifdef CONFIG_SPL_DSU_SUPPORT
-extern int dsudownload(u32 *, u32 *);
-
-static void dsuload(void)
-{
-	u32 loadaddr;
-	u32 size;
-	int err;
-	struct image_header *header;
-
-	err = dsudownload(&loadaddr, &size);
-
-	if (err) {
-		serial_printf("usb download failed");
-		hang();
-	}
-	header = (struct image_header *)loadaddr;
-	parse_image_header(header);
-	memcpy((void *)image_load_addr, (void *)loadaddr, size); 
-	image_size = size;
-}
-#endif
-
 void jump_to_image_no_args(void) __attribute__ ((noreturn));
 void board_init_r(gd_t *id, ulong dummy)
 {
@@ -160,7 +137,7 @@ void board_init_r(gd_t *id, ulong dummy)
 #endif
 #ifdef CONFIG_SPL_DSU_SUPPORT
 	case BOOT_DEVICE_USB:
-		dsuload();
+		spl_dsu_load_image();
 		break;
 #endif
 	default:
