@@ -47,6 +47,8 @@
 /* input clock of PLL: ORIGEN has 24MHz input clock */
 #define CONFIG_SYS_CLK_FREQ		24000000
 
+#define CONFIG_OF_LIBFDT		1
+
 #define CONFIG_SETUP_MEMORY_TAGS
 #define CONFIG_CMDLINE_TAG
 #define CONFIG_INITRD_TAG
