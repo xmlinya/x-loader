@@ -95,6 +95,10 @@ void spl_nand_load_image(void);
 /* MMC SPL functions */
 void spl_mmc_load_image(void);
 
+/* USB SPL functions */
+void spl_dsu_load_image(void);
+int dsudownload(u32 *, u32 *);
+
 #ifdef CONFIG_SPL_BOARD_INIT
 void spl_board_init(void);
 #endif
