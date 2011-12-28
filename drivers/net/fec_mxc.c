@@ -207,11 +207,12 @@ static int miiphy_restart_aneg(struct eth_device *dev)
 	fec_mdio_write(eth, fec->phy_id, MII_ADVERTISE,
 			LPA_100FULL | LPA_100HALF | LPA_10FULL |
 			LPA_10HALF | PHY_ANLPAR_PSB_802_3);
-	fec_mdio_write(eth, fec->phy_id, MII_BMCR,
-			BMCR_ANENABLE | BMCR_ANRESTART);
 
 	if (fec->mii_postcall)
 		ret = fec->mii_postcall(fec->phy_id);
+
+	fec_mdio_write(eth, fec->phy_id, MII_BMCR,
+			BMCR_ANENABLE | BMCR_ANRESTART);
 
 	return ret;
 }
