@@ -119,8 +119,11 @@
 #define CONFIG_SYS_MEMTEST_END		(PHYS_SDRAM_1_SIZE - 0x100000)
 
 /* Room required on the stack for the environment data */
-#define CONFIG_ENV_SIZE			0x2000
-#define CONFIG_ENV_IS_NOWHERE
+#define CONFIG_ENV_IS_IN_NVRAM	1	/* use NVRAM for environment vars */
+#define CONFIG_SYS_NVRAM_BASE_ADDR	0xfff88000	/* NVRAM base address */
+#define CONFIG_SYS_NVRAM_SIZE		0x8000		/* NVRAM size */
+#define CONFIG_ENV_SIZE		0x2000		/* Size of Environment vars */
+#define CONFIG_ENV_ADDR		CONFIG_SYS_NVRAM_BASE_ADDR	/* Env	*/
 
 #define CONFIG_SYS_SDRAM_BASE		0x00000000
 #define CONFIG_SYS_TEXT_BASE		0x00001000
