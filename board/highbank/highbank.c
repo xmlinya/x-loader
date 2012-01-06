@@ -23,6 +23,7 @@
 #include <asm/io.h>
 
 #define HB_SREG_A9_PWR_REQ		0xfff3cf00
+#define HB_SREG_A9_BOOT_SRC_STAT	0xfff3cf04
 #define HB_PWR_SUSPEND			0
 #define HB_PWR_SOFT_RESET		1
 #define HB_PWR_HARD_RESET		2
@@ -54,9 +55,21 @@ int board_eth_init(bd_t *bis)
 
 int misc_init_r(void)
 {
+	char envbuffer[16];
+	u32 boot_choice;
+
 	ahci_init(0xffe08000);
 	scsi_scan(1);
-	return 0;
+	
+	boot_choice = readl(HB_SREG_A9_BOOT_SRC_STAT) & 0xff;
+	sprintf(envbuffer, "bootcmd%d", boot_choice);
+	if (getenv(envbuffer)) {
+		sprintf(envbuffer, "run bootcmd%d", boot_choice);
+		setenv("bootcmd", envbuffer);
+	} else
+		setenv("bootcmd", "");
+
+ 	return 0;
 }
 
 int dram_init(void)
