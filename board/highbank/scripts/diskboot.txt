@@ -1,0 +1,2 @@
+ext2load ${boot_ifc} ${bootdevice} ${kernel_addr_r} uImage; ext2load ${boot_ifc} ${bootdevice} ${ramdisk_addr_r} uInitrd; bootm ${kernel_addr_r} ${ramdisk_addr_r} ${fdt_addr}
+
