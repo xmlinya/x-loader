@@ -1,0 +1,17 @@
+bootcmd_pxe=dhcp; pxe get; pxe boot
+bootcmd_disk=ext2load ${boot_ifc} ${bootdevice} 0x100000 boot.scr; source 0x100000
+bootcmd_sata=setenv boot_ifc scsi; run bootcmd_disk
+bootcmd_mmc=setenv boot_ifc mmc; run bootcmd_disk
+bootcmd0=run bootcmd_sata; run bootcmd_pxe
+bootcmd1=run bootcmd_pxe
+bootcmd2=run bootcmd_sata
+bootcmd15=run bootcmd_mmc
+bootdevice=0:1
+bootargs=console=ttyAMA0,38400n8 root=LABEL=rootfs rootwait
+bootdelay=1000
+netretry=once
+fdt_addr=0x1000
+pxefile_addr_r=0x700000
+kernel_addr_r=0x800000
+ramdisk_addr_r=0x01000000
+
