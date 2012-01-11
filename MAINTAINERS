@@ -704,6 +704,7 @@ Chander Kashyap <k.chander@samsung.com>
 
 	origen			ARM ARMV7 (EXYNOS4210 SoC)
 	SMDKV310		ARM ARMV7 (EXYNOS4210 SoC)
+	SMDK5250		ARM ARMV7 (EXYNOS5250 SoC)
 
 Torsten Koschorrek <koschorrek@synertronixx.de>
 	scb9328		ARM920T (i.MXL)
