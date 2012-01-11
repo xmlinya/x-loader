@@ -26,17 +26,33 @@ LIB	= $(obj)lib$(BOARD).o
 
 SOBJS	:= lowlevel_init.o
 SOBJS	+= mem_setup.o
+
+ifndef CONFIG_SPL_BUILD
 COBJS	+= smdk5250.o
+endif
+
+ifdef CONFIG_SPL_BUILD
+COBJS	+= mmc_boot.o
+endif
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS) $(SOBJS))
 
 ALL	:=	 $(obj).depend $(LIB)
 
+ifdef CONFIG_SPL_BUILD
+ALL	+= $(OBJTREE)/tools/mk$(BOARD)spl
+endif
+
 all:	$(ALL)
 
 $(LIB):	$(OBJS)
 	$(call cmd_link_o_target, $(OBJS))
+
+ifdef CONFIG_SPL_BUILD
+$(OBJTREE)/tools/mk$(BOARD)spl:	tools/mkexynos_image.c
+	$(HOSTCC) tools/mkexynos_image.c -o $(OBJTREE)/tools/mk$(BOARD)spl
+endif
 
 #########################################################################
 
