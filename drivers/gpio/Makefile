@@ -26,6 +26,7 @@ include $(TOPDIR)/config.mk
 LIB 	:= $(obj)libgpio.o
 
 COBJS-$(CONFIG_AT91_GPIO)	+= at91_gpio.o
+COBJS-$(CONFIG_DB8500_GPIO)	+= db8500_gpio.o
 COBJS-$(CONFIG_KIRKWOOD_GPIO)	+= kw_gpio.o
 COBJS-$(CONFIG_MARVELL_GPIO)	+= mvgpio.o
 COBJS-$(CONFIG_MARVELL_MFP)	+= mvmfp.o
@@ -37,6 +38,7 @@ COBJS-$(CONFIG_S5P)		+= s5p_gpio.o
 COBJS-$(CONFIG_TEGRA2_GPIO)	+= tegra2_gpio.o
 COBJS-$(CONFIG_DA8XX_GPIO)	+= da8xx_gpio.o
 COBJS-$(CONFIG_ALTERA_PIO)	+= altera_pio.o
+COBJS-$(CONFIG_TC35892_GPIO)	+= tc35892.o
 
 COBJS	:= $(COBJS-y)
 SRCS 	:= $(COBJS:.o=.c)
