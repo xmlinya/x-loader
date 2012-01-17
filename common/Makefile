@@ -123,6 +123,7 @@ COBJS-$(CONFIG_CMD_MII) += cmd_mdio.o
 endif
 COBJS-$(CONFIG_CMD_MISC) += cmd_misc.o
 COBJS-$(CONFIG_CMD_MMC) += cmd_mmc.o
+COBJS-$(CONFIG_CMD_STE_MMC) += cmd_ste_mmc.o
 COBJS-$(CONFIG_CMD_MMC_SPI) += cmd_mmc_spi.o
 COBJS-$(CONFIG_MP) += cmd_mp.o
 COBJS-$(CONFIG_CMD_MTDPARTS) += cmd_mtdparts.o
