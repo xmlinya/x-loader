@@ -23,6 +23,9 @@
  * MA 02111-1307 USA
  */
 
+#ifdef CONFIG_SNOWBALL_MMC_HACK
+#include <mmc_ste.h>
+#else /* CONFIG_SNOWBALL_MMC_HACK */
 #ifndef _MMC_H_
 #define _MMC_H_
 
@@ -329,3 +332,4 @@ int mmc_legacy_init(int verbose);
 #endif
 
 #endif /* _MMC_H_ */
+#endif /* CONFIG_SNOWBALL_MMC_HACK */

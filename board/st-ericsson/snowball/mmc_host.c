@@ -23,7 +23,6 @@
 #include <div64.h>
 #include "mmc_fifo.h"
 
-
 struct mmc_host {
 	struct sdi_registers *base;
 };
