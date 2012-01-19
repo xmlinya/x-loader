@@ -47,15 +47,15 @@ static int wait_for_command_end(struct mmc *dev, struct mmc_cmd *cmd)
 		hoststatus = readl(&host->base->status) & statusmask;
 	while (!hoststatus);
 
-	debugX(DBG_LVL_VERBOSE, "SDI_ICR <= 0x%08X\n", statusmask);
+	debug("SDI_ICR <= 0x%08X\n", statusmask);
 	writel(statusmask, &host->base->status_clear);
 
 	if (hoststatus & SDI_STA_CTIMEOUT) {
-		debugX(DBG_LVL_VERBOSE, "CMD%d time out\n", cmd->cmdidx);
+		debug("CMD%d time out\n", cmd->cmdidx);
 		return TIMEOUT;
 	} else if ((hoststatus & SDI_STA_CCRCFAIL) &&
 		   (cmd->flags & MMC_RSP_CRC)) {
-		debugX(DBG_LVL_VERBOSE, "CMD%d CRC error\n", cmd->cmdidx);
+		debug("CMD%d CRC error\n", cmd->cmdidx);
 		return MMC_CMD_CRC_FAIL;
 	}
 
@@ -64,8 +64,7 @@ static int wait_for_command_end(struct mmc *dev, struct mmc_cmd *cmd)
 		cmd->response[1] = readl(&host->base->response1);
 		cmd->response[2] = readl(&host->base->response2);
 		cmd->response[3] = readl(&host->base->response3);
-		debugX(DBG_LVL_VERBOSE,
-			"CMD%d response[0]:0x%08X, response[1]:0x%08X, "
+		debug("CMD%d response[0]:0x%08X, response[1]:0x%08X, "
 			"response[2]:0x%08X, response[3]:0x%08X\n",
 			cmd->cmdidx, cmd->response[0], cmd->response[1],
 			cmd->response[2], cmd->response[3]);
@@ -83,7 +82,7 @@ static int do_command(struct mmc *dev, struct mmc_cmd *cmd)
 	struct mmc_host *host = dev->priv;
 	u32 lap = 0;
 
-	debugX(DBG_LVL_VERBOSE, "Request to do CMD%d on %s\n", cmd->cmdidx,
+	debug("Request to do CMD%d on %s\n", cmd->cmdidx,
 		dev->name);
 
 	sdi_cmd = (cmd->cmdidx & SDI_CMD_CMDINDEX_MASK) | SDI_CMD_CPSMEN;
@@ -94,10 +93,10 @@ static int do_command(struct mmc *dev, struct mmc_cmd *cmd)
 			sdi_cmd |= SDI_CMD_LONGRESP;
 	}
 
-	debugX(DBG_LVL_VERBOSE, "SDI_ARG <= 0x%08X\n", cmd->cmdarg);
+	debug("SDI_ARG <= 0x%08X\n", cmd->cmdarg);
 	writel((u32)cmd->cmdarg, &host->base->argument);
 	udelay(COMMAND_REG_DELAY); /* DONT REMOVE */
-	debugX(DBG_LVL_VERBOSE, "SDI_CMD <= 0x%08X\n", sdi_cmd);
+	debug("SDI_CMD <= 0x%08X\n", sdi_cmd);
 
 	/*
 	 * It has been noticed that after a write operation some cards does
@@ -120,7 +119,7 @@ static int do_command(struct mmc *dev, struct mmc_cmd *cmd)
 	/* After CMD3 open drain is switched off and push pull is used. */
 	if ((result == MMC_OK) && (cmd->cmdidx == MMC_CMD_SET_RELATIVE_ADDR)) {
 		u32 sdi_pwr = readl(&host->base->power) & ~SDI_PWR_OPD;
-		debugX(DBG_LVL_VERBOSE, "SDI_PWR <= 0x%08X\n", sdi_pwr);
+		debug("SDI_PWR <= 0x%08X\n", sdi_pwr);
 		writel(sdi_pwr, &host->base->power);
 	}
 
@@ -147,7 +146,7 @@ static int read_bytes(struct mmc *dev, u32 *dest, u32 blkcount, u32 blksize)
 	struct mmc_host *host = dev->priv;
 	u32 status;
 
-	debugX(DBG_LVL_VERBOSE, "read_bytes: blkcount=%u blksize=%u\n",
+	debug("read_bytes: blkcount=%u blksize=%u\n",
 		blkcount, blksize);
 
 	status = mmc_fifo_read(&host->base->fifo, dest, xfercount,
@@ -161,9 +160,9 @@ static int read_bytes(struct mmc *dev, u32 *dest, u32 blkcount, u32 blksize)
 			return MMC_DATA_CRC_FAIL;
 	}
 
-	debugX(DBG_LVL_VERBOSE, "SDI_ICR <= 0x%08X\n", SDI_ICR_MASK);
+	debug("SDI_ICR <= 0x%08X\n", SDI_ICR_MASK);
 	writel(SDI_ICR_MASK, &host->base->status_clear);
-	debugX(DBG_LVL_VERBOSE, "Reading data completed status:0x%08X\n",
+	debug("Reading data completed status:0x%08X\n",
 		status);
 
 	return MMC_OK;
@@ -179,7 +178,7 @@ static int write_bytes(struct mmc *dev, u32 *src, u32 blkcount, u32 blksize)
 	u32 status;
 	u32 status_busy;
 
-	debugX(DBG_LVL_VERBOSE, "write_bytes: blkcount=%u blksize=%u\n",
+	debug("write_bytes: blkcount=%u blksize=%u\n",
 		blkcount, blksize);
 
 	status = mmc_fifo_write(src, &host->base->fifo, xfercount,
@@ -199,7 +198,7 @@ static int write_bytes(struct mmc *dev, u32 *src, u32 blkcount, u32 blksize)
 		status_busy = readl(&host->base->status) & SDI_STA_CARDBUSY;
 
 	writel(SDI_ICR_MASK, &host->base->status_clear);
-	debugX(DBG_LVL_VERBOSE, "Writing data completed status:0x%08X\n",
+	debug("Writing data completed status:0x%08X\n",
 		status);
 
 	return MMC_OK;
@@ -225,8 +224,8 @@ static int do_data_transfer(struct mmc *dev,
 	u32 data_ctrl = 0;
 	u32 data_len = (u32) (data->blocks * data->blocksize);
 
-	debugX(DBG_LVL_VERBOSE, "Request to do data xfer on %s\n", dev->name);
-	debugX(DBG_LVL_VERBOSE, "do_data_transfer(%u) start\n", data->blocks);
+	debug("Request to do data xfer on %s\n", dev->name);
+	debug("do_data_transfer(%u) start\n", data->blocks);
 
 #if (DEBUG >= DBG_LVL_INFO)
 	//	if (data->blocks > 1)
@@ -254,17 +253,17 @@ static int do_data_transfer(struct mmc *dev,
 		printf("SDI_DCTRL_DDR_MODE\n");
 #endif
 
-	debugX(DBG_LVL_VERBOSE, "SDI_DTIMER <= 0x%08X\n", dev->data_timeout);
+	debug("SDI_DTIMER <= 0x%08X\n", dev->data_timeout);
 	writel(dev->data_timeout, &host->base->datatimer);
-	debugX(DBG_LVL_VERBOSE, "SDI_DLEN <= 0x%08X\n", data_len);
+	debug("SDI_DLEN <= 0x%08X\n", data_len);
 	writel(data_len, &host->base->datalength);
 	udelay(DATA_REG_DELAY); /* DONT REMOVE */
 
 	if (data->flags & (MMC_DATA_READ)) {
-		debugX(DBG_LVL_VERBOSE, "It is a read operation\n");
+		debug("It is a read operation\n");
 
 		data_ctrl |= SDI_DCTRL_DTDIR_IN;
-		debugX(DBG_LVL_VERBOSE, "SDI_DCTRL <= 0x%08X\n", data_ctrl);
+		debug("SDI_DCTRL <= 0x%08X\n", data_ctrl);
 		writel(data_ctrl, &host->base->datactrl);
 
 		error = do_command(dev, cmd);
@@ -276,13 +275,13 @@ static int do_data_transfer(struct mmc *dev,
 				   (u32)data->blocks,
 				   (u32)data->blocksize);
 	} else if (data->flags & (MMC_DATA_WRITE)) {
-		debugX(DBG_LVL_VERBOSE, "It is a write operation\n");
+		debug("It is a write operation\n");
 
 		error = do_command(dev, cmd);
 		if (error)
 			return error;
 
-		debugX(DBG_LVL_VERBOSE, "SDI_DCTRL <= 0x%08X\n", data_ctrl);
+		debug("SDI_DCTRL <= 0x%08X\n", data_ctrl);
 		writel(data_ctrl, &host->base->datactrl);
 
 		error = write_bytes(dev,
@@ -310,7 +309,7 @@ static int do_data_transfer(struct mmc *dev,
 	}
 #endif
 #endif
-	debugX(DBG_LVL_VERBOSE, "do_data_transfer() end\n");
+	debug("do_data_transfer() end\n");
 
 	return error;
 }
@@ -345,7 +344,7 @@ static int mmc_host_reset(struct mmc *dev)
 	struct mmc_host *host = dev->priv;
 	u32 sdi_u32 = SDI_PWR_OPD | SDI_PWR_PWRCTRL_ON;
 
-	debugX(DBG_LVL_VERBOSE, "SDI_PWR <= 0x%08X\n", sdi_u32);
+	debug("SDI_PWR <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->power);
 	return MMC_OK;
 }
@@ -378,8 +377,7 @@ static void host_set_ios(struct mmc *dev)
 		u32 clkdiv = 0;
 		u32 tmp_clock;
 
-		debugX(DBG_LVL_VERBOSE,
-			"setting clock and bus width in the host:");
+		debug("setting clock and bus width in the host:");
 		if (dev->clock >= dev->f_max) {
 			clkdiv = 0;
 			dev->clock = dev->f_max;
@@ -423,7 +421,7 @@ static void host_set_ios(struct mmc *dev)
 
 	dev->data_timeout = MMC_DATA_TIMEOUT * dev->clock;
 
-	debugX(DBG_LVL_VERBOSE, "SDI_CLKCR <= 0x%08X\n", sdi_clkcr);
+	debug("SDI_CLKCR <= 0x%08X\n", sdi_clkcr);
 	writel(sdi_clkcr, &host->base->clock);
 	udelay(CLK_CHANGE_DELAY);
 }
@@ -463,23 +461,23 @@ static int emmc_host_init(struct mmc *dev)
 	/* TODO: Investigate what is actually needed of the below. */
 
 	if (u8500_is_earlydrop() || u8500_is_snowball()) {
-		debugX(DBG_LVL_VERBOSE, "configuring EMMC for ED\n");
+		debug("configuring EMMC for ED\n");
 		host->base = (struct sdi_registers *)CFG_EMMC_BASE_ED;
 	} else {
-		debugX(DBG_LVL_VERBOSE, "configuring EMMC for V1\n");
+		debug("configuring EMMC for V1\n");
 		host->base = (struct sdi_registers *)CFG_EMMC_BASE_V1;
 	}
 
 	sdi_u32 = SDI_PWR_OPD | SDI_PWR_PWRCTRL_ON;
-	debugX(DBG_LVL_VERBOSE, "SDI_PWR <= 0x%08X\n", sdi_u32);
+	debug("SDI_PWR <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->power);
 	/* setting clk freq less than 400KHz */
 	sdi_u32 = SDI_CLKCR_CLKDIV_INIT | SDI_CLKCR_CLKEN | SDI_CLKCR_HWFC_EN;
-	debugX(DBG_LVL_VERBOSE, "SDI_CLKCR <= 0x%08X\n", sdi_u32);
+	debug("SDI_CLKCR <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->clock);
 	udelay(CLK_CHANGE_DELAY);
 	sdi_u32 = readl(&host->base->mask0) & ~SDI_MASK0_MASK;
-	debugX(DBG_LVL_VERBOSE, "SDI_MASK0 <= 0x%08X\n", sdi_u32);
+	debug("SDI_MASK0 <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->mask0);
 	dev->clock = MCLK / (2 + SDI_CLKCR_CLKDIV_INIT);
 	sprintf(dev->name, "EMMC");
@@ -507,15 +505,15 @@ static int mmc_host_init(struct mmc *dev)
 
 	host->base = (struct sdi_registers *)CFG_MMC_BASE;
 	sdi_u32 = 0xBF;
-	debugX(DBG_LVL_VERBOSE, "SDI_PWR <= 0x%08X\n", sdi_u32);
+	debug("SDI_PWR <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->power);
 	/* setting clk freq just less than 400KHz */
 	sdi_u32 = SDI_CLKCR_CLKDIV_INIT | SDI_CLKCR_CLKEN | SDI_CLKCR_HWFC_EN;
-	debugX(DBG_LVL_VERBOSE, "SDI_CLKCR <= 0x%08X\n", sdi_u32);
+	debug("SDI_CLKCR <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->clock);
 	udelay(CLK_CHANGE_DELAY);
 	sdi_u32 = readl(&host->base->mask0) & ~SDI_MASK0_MASK;
-	debugX(DBG_LVL_VERBOSE, "SDI_MASK0 <= 0x%08X\n", sdi_u32);
+	debug("SDI_MASK0 <= 0x%08X\n", sdi_u32);
 	writel(sdi_u32, &host->base->mask0);
 	dev->clock = MCLK / (2 + SDI_CLKCR_CLKDIV_INIT);
 	sprintf(dev->name, "MMC");
@@ -540,7 +538,7 @@ int board_mmc_init(bd_t *bis)
 	int error;
 	struct mmc *dev;
 
-	debugX(DBG_LVL_VERBOSE, "[%s] mmc_host - board_mmc_init board ed %d, snow %d\n",
+	debug("[%s] mmc_host - board_mmc_init board ed %d, snow %d\n",
 	       __func__,u8500_is_earlydrop(), u8500_is_snowball());
 
 	(void) bis;  /* Parameter not used! */
@@ -555,7 +553,7 @@ int board_mmc_init(bd_t *bis)
 		return -1;
 	}
 	mmc_register(dev);
-	debugX(DBG_LVL_VERBOSE, "registered emmc interface number is:%d\n",
+	debug("registered emmc interface number is:%d\n",
 	      dev->block_dev.dev);
 
 
@@ -581,7 +579,7 @@ int board_mmc_init(bd_t *bis)
 		return -1;
 	}
 	mmc_register(dev);
-	debugX(DBG_LVL_VERBOSE, "registered mmc/sd interface number is:%d\n",
+	debug("registered mmc/sd interface number is:%d\n",
 	      dev->block_dev.dev);
 
 	return 0;
