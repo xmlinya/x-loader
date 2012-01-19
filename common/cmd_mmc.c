@@ -22,9 +22,11 @@
  */
 
 #include <common.h>
+#include <config.h>
 #include <command.h>
 #include <mmc.h>
 
+#ifndef CONFIG_SNOWBALL_MMC_HACK
 static int curr_device = -1;
 #ifndef CONFIG_GENERIC_MMC
 int do_mmc (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
@@ -321,3 +323,4 @@ U_BOOT_CMD(
 	"mmc dev [dev] [part] - show or set current mmc device [partition]\n"
 	"mmc list - lists available devices");
 #endif
+#endif /* !CONFIG_SNOWBALL_MMC_HACK */
