@@ -646,7 +646,7 @@ void *dsudownload(u32 *loadaddr, u32 *loadsize)
 		}
 		priv.exit |= ctrlc();
 		if (priv.exit) {
-			printf("dsudowload end\n");
+			printf("dsudownload end\n");
 			break;
 		}
 	}

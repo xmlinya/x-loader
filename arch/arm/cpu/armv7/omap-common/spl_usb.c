@@ -48,7 +48,7 @@ void spl_dsu_load_image(void)
 	}
 	header = (struct image_header *)loadaddr;
 	spl_parse_image_header(header);
-	memcpy((void *)loadaddr, (void *)spl_image.load_addr, spl_image.size); 
+	memcpy((void *)spl_image.load_addr, (void *)loadaddr, spl_image.size); 
 }
 #endif
 
