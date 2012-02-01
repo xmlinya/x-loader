@@ -8,7 +8,7 @@ bootcmd2=run bootcmd_sata
 bootcmd15=run bootcmd_mmc
 bootdevice=0:1
 bootargs=console=ttyAMA0,38400n8 root=LABEL=rootfs rootwait
-bootdelay=1000
+bootdelay=2
 netretry=once
 fdt_addr=0x1000
 pxefile_addr_r=0x700000
