@@ -104,6 +104,8 @@ int serial_init (void)
 
 #ifdef CONFIG_PL011_SERIAL
 
+int serial_init_called;
+
 int serial_init (void)
 {
 	struct pl01x_regs *regs = pl01x_get_regs(CONSOLE_PORT);
@@ -120,6 +122,7 @@ int serial_init (void)
 			readl(&regs->dr);
 	}
 #endif
+	serial_init_called++;
 
 	/* First, disable everything */
 	writel(0, &regs->pl011_cr);
@@ -144,6 +147,7 @@ int serial_init (void)
 	writel(lcr, &regs->pl011_lcrh);
 
 #ifdef CONFIG_PL011_SERIAL_RLCR
+#if 0
 	{
 		int i;
 
@@ -157,6 +161,9 @@ int serial_init (void)
 
 		writel(lcr, &regs->pl011_rlcr);
 	}
+#else
+		writel(lcr, &regs->pl011_rlcr);
+#endif
 #endif
 	/* Finally, enable the UART */
 	writel(UART_PL011_CR_UARTEN | UART_PL011_CR_TXE | UART_PL011_CR_RXE,
@@ -166,6 +173,7 @@ int serial_init (void)
 }
 
 #endif /* CONFIG_PL011_SERIAL */
+
 
 void serial_putc (const char c)
 {
@@ -184,7 +192,12 @@ void serial_puts (const char *s)
 
 int serial_getc (void)
 {
-	return pl01x_getc (CONSOLE_PORT);
+	int data = pl01x_getc (CONSOLE_PORT);
+
+	if (!serial_init_called)
+		serial_init();
+
+	return data;
 }
 
 int serial_tstc (void)
