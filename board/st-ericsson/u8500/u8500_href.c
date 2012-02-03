@@ -451,7 +451,7 @@ int board_mmc_init(bd_t *bd)
 	if (u8500_mmci_board_init())
 		return -ENODEV;
 
-	if (arm_pl180_mmci_init())
+	if (arm_pl180_mmci_init(CONFIG_MMC_DEV_NUM))
 		return -ENODEV;
 	return 0;
 }

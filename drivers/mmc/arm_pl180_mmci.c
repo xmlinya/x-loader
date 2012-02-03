@@ -360,12 +360,26 @@ err:
  * Set initial clock and power for mmc slot.
  * Initialize mmc struct and register with mmc framework.
  */
-static int arm_pl180_mmci_host_init(struct mmc *dev)
+static int arm_pl180_mmci_host_init(int index, struct mmc *dev)
 {
 	struct mmc_host *host = dev->priv;
 	u32 sdi_u32;
 
-	host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE;
+	switch (index) {
+#ifdef CONFIG_ARM_PL180_MMCI_BASE0
+	case 0:
+		host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE0;
+		break;
+#endif
+#ifdef CONFIG_ARM_PL180_MMCI_BASE1
+	case 1:
+		host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE1;
+		break;
+#endif
+	default:
+		printf("Bad index in %s\n", __FUNCTION__);
+		return 1;
+	}
 
 	/* Initially set power-on, full voltage & MMCI read */
 	sdi_u32 = INIT_PWR;
@@ -393,7 +407,7 @@ static int arm_pl180_mmci_host_init(struct mmc *dev)
 	return 0;
 }
 
-int arm_pl180_mmci_init(void)
+int arm_pl180_mmci_init(int index)
 {
 	int error;
 	struct mmc *dev;
@@ -402,9 +416,9 @@ int arm_pl180_mmci_init(void)
 	if (!dev)
 		return -1;
 
-	error = arm_pl180_mmci_host_init(dev);
+	error = arm_pl180_mmci_host_init(index, dev);
 	if (error) {
-		printf("mmci_host_init error - %d\n", error);
+		printf("mmci_host_init index %d error - %d\n", index, error);
 		return -1;
 	}
 
