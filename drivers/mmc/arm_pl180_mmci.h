@@ -26,7 +26,7 @@
 #ifndef __ARM_PL180_MMCI_H__
 #define __ARM_PL180_MMCI_H__
 
-int arm_pl180_mmci_init(void);
+int arm_pl180_mmci_init(int);
 
 #define COMMAND_REG_DELAY	300
 #define DATA_REG_DELAY		1000
