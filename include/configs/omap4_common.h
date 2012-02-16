@@ -166,7 +166,12 @@
 	"loadbootscript=fatload mmc ${mmcdev} ${loadaddr} ${bootscr}\0" \
 	"bootscript=echo Running bootscript from mmc${mmcdev} ...; " \
 		"source ${loadaddr}\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} uEnv.txt\0" \
+	"preenv=preEnv.txt\0" \
+	"loadpreenv=fatload mmc ${mmcdev} ${loadaddr} ${preenv}\0" \
+	"importpreenv=echo Importing preboot environment from mmc ...; " \
+		"env import -t $loadaddr $filesize\0" \
+	"bootenv=uEnv.txt\0" \
+	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}\0" \
 	"importbootenv=echo Importing environment from mmc ...; " \
 		"env import -t $loadaddr $filesize\0" \
 	"loaduimage=fatload mmc ${mmcdev} ${loadaddr} uImage\0" \
@@ -176,6 +181,19 @@
 	"kernel_addr_r=0x88000000\0" \
 	"ramdisk_addr_r=0x81600000\0" \
 	"pxefile_addr_r=0x86000000\0"
+
+#define CONFIG_PREBOOT \
+	"echo checking for ${preenv};" \
+	"if mmc rescan ${mmcdev}; then " \
+		"if run loadpreenv; then " \
+			"echo Loaded environment from ${preenv};" \
+			"run importpreenv;" \
+			"if test -n $preenvcmd; then " \
+				"echo Running preenvcmd ...;" \
+				"run preenvcmd;" \
+			"fi;" \
+		"fi; " \
+	"fi; " \
 
 #define CONFIG_BOOTCOMMAND \
 	"if mmc rescan ${mmcdev}; then " \
