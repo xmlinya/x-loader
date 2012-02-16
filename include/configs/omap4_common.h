@@ -183,6 +183,7 @@
 	"pxefile_addr_r=0x86000000\0"
 
 #ifdef CONFIG_SPL_USB
+#define CONFIG_BOOTCOMMAND \
 	"if usb start; then " \
 		"set autoload no; "\
 		"bootp; "\
