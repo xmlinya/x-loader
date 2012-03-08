@@ -448,12 +448,26 @@ static int u8500_mmci_board_init(void)
 
 int board_mmc_init(bd_t *bd)
 {
+	struct pl180_mmc_host *host;
+
 	if (u8500_mmci_board_init())
 		return -ENODEV;
 
-	if (arm_pl180_mmci_init(CONFIG_MMC_DEV_NUM))
-		return -ENODEV;
-	return 0;
+	host = malloc(sizeof(struct pl180_mmc_host));
+	if (!host)
+		return -ENOMEM;
+	memset(host, 0, sizeof(*host));
+
+	strcpy(host->name, "MMC");
+	host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE;
+	host->pwr_init = INIT_PWR;
+	host->clkdiv_init = SDI_CLKCR_CLKDIV_INIT | SDI_CLKCR_CLKEN;
+	host->voltages = VOLTAGE_WINDOW_MMC;
+	dev->caps = 0;
+	host->clock_in = ARM_MCLK;
+	host->clock_min = ARM_MCLK / (2 * (SDI_CLKCR_CLKDIV_INIT + 1));
+	host->clock_max = CONFIG_ARM_PL180_MMCI_CLOCK_FREQ;
+	return arm_pl180_mmci_init(host);
 }
 #endif
 

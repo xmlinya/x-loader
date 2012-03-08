@@ -32,14 +32,11 @@
 #include "arm_pl180_mmci.h"
 #include <malloc.h>
 
-struct mmc_host {
-	struct sdi_registers *base;
-};
 
 static int wait_for_command_end(struct mmc *dev, struct mmc_cmd *cmd)
 {
 	u32 hoststatus, statusmask;
-	struct mmc_host *host = dev->priv;
+	struct pl180_mmc_host *host = dev->priv;
 
 	statusmask = SDI_STA_CTIMEOUT | SDI_STA_CCRCFAIL;
 	if ((cmd->resp_type & MMC_RSP_PRESENT))
@@ -51,10 +48,12 @@ static int wait_for_command_end(struct mmc *dev, struct mmc_cmd *cmd)
 		hoststatus = readl(&host->base->status) & statusmask;
 	while (!hoststatus);
 
+	debug("SDI_ICR <= 0x%08X\n", statusmask);
+	debug("status <= 0x%08X\n", hoststatus);
 	writel(statusmask, &host->base->status_clear);
 	if (hoststatus & SDI_STA_CTIMEOUT) {
-		printf("CMD%d time out\n", cmd->cmdidx);
-		return -ETIMEDOUT;
+		debug("CMD%d time out\n", cmd->cmdidx);
+		return TIMEOUT;
 	} else if ((hoststatus & SDI_STA_CCRCFAIL) &&
 		   (cmd->flags & MMC_RSP_CRC)) {
 		printf("CMD%d CRC error\n", cmd->cmdidx);
@@ -80,7 +79,11 @@ static int do_command(struct mmc *dev, struct mmc_cmd *cmd)
 {
 	int result;
 	u32 sdi_cmd = 0;
-	struct mmc_host *host = dev->priv;
+	struct pl180_mmc_host *host = dev->priv;
+	u32 lap = 0;
+
+	debug("Request to do CMD%d on %s\n", cmd->cmdidx,
+		dev->name);
 
 	sdi_cmd = ((cmd->cmdidx & SDI_CMD_CMDINDEX_MASK) | SDI_CMD_CPSMEN);
 
@@ -90,10 +93,24 @@ static int do_command(struct mmc *dev, struct mmc_cmd *cmd)
 			sdi_cmd |= SDI_CMD_LONGRESP;
 	}
 
+	debug("SDI_ARG <= 0x%08X\n", cmd->cmdarg);
 	writel((u32)cmd->cmdarg, &host->base->argument);
 	udelay(COMMAND_REG_DELAY);
-	writel(sdi_cmd, &host->base->command);
-	result = wait_for_command_end(dev, cmd);
+	debug("SDI_CMD <= 0x%08X\n", sdi_cmd);
+
+	/*
+	 * It has been noticed that after a write operation some cards do
+	 * not respond to a new command for a few milliseconds. So here we
+	 * retry the command a couple of times if we get a timeout.
+	 */
+	do {
+		writel(sdi_cmd, &host->base->command);
+		result = wait_for_command_end(dev, cmd);
+		if ((result != TIMEOUT) || (lap >= 10))
+			break;
+		udelay(1000);
+		lap++;
+	} while (1);
 
 	/* After CMD2 set RCA to a none zero value. */
 	if ((result == 0) && (cmd->cmdidx == MMC_CMD_ALL_SEND_CID))
@@ -112,7 +129,7 @@ static int read_bytes(struct mmc *dev, u32 *dest, u32 blkcount, u32 blksize)
 {
 	u32 *tempbuff = dest;
 	u64 xfercount = blkcount * blksize;
-	struct mmc_host *host = dev->priv;
+	struct pl180_mmc_host *host = dev->priv;
 	u32 status, status_err;
 
 	debug("read_bytes: blkcount=%u blksize=%u\n", blkcount, blksize);
@@ -168,7 +185,7 @@ static int write_bytes(struct mmc *dev, u32 *src, u32 blkcount, u32 blksize)
 	u32 *tempbuff = src;
 	int i;
 	u64 xfercount = blkcount * blksize;
-	struct mmc_host *host = dev->priv;
+	struct pl180_mmc_host *host = dev->priv;
 	u32 status, status_err;
 
 	debug("write_bytes: blkcount=%u blksize=%u\n", blkcount, blksize);
@@ -227,14 +244,24 @@ static int do_data_transfer(struct mmc *dev,
 			    struct mmc_data *data)
 {
 	int error = -ETIMEDOUT;
-	struct mmc_host *host = dev->priv;
+	struct pl180_mmc_host *host = dev->priv;
 	u32 blksz = 0;
 	u32 data_ctrl = 0;
 	u32 data_len = (u32) (data->blocks * data->blocksize);
 
-	blksz = (ffs(data->blocksize) - 1);
-	data_ctrl |= ((blksz << 4) & SDI_DCTRL_DBLKSIZE_MASK);
-	data_ctrl |= SDI_DCTRL_DTEN;
+	if (!host->version2) {
+		blksz = (ffs(data->blocksize) - 1);
+		data_ctrl |= ((blksz << 4) & SDI_DCTRL_DBLKSIZE_MASK);
+	} else {
+		blksz = data->blocksize;
+		data_ctrl |= (blksz << SDI_DCTRL_DBLOCKSIZE_V2_SHIFT);
+	}
+	data_ctrl |= SDI_DCTRL_DTEN | SDI_DCTRL_BUSYMODE;
+
+#ifdef DEBUG
+	if (data_ctrl & SDI_DCTRL_DDR_MODE)
+		printf("SDI_DCTRL_DDR_MODE\n");
+#endif
 
 	writel(SDI_DTIMER_DEFAULT, &host->base->datatimer);
 	writel(data_len, &host->base->datalength);
@@ -280,17 +307,15 @@ static int host_request(struct mmc *dev,
 /* MMC uses open drain drivers in the enumeration phase */
 static int mmc_host_reset(struct mmc *dev)
 {
-	struct mmc_host *host = dev->priv;
-	u32 sdi_u32 = SDI_PWR_OPD | SDI_PWR_PWRCTRL_ON;
+	struct pl180_mmc_host *host = dev->priv;
 
-	writel(sdi_u32, &host->base->power);
-
+	writel(host->pwr_init, &host->base->power);
 	return 0;
 }
 
 static void host_set_ios(struct mmc *dev)
 {
-	struct mmc_host *host = dev->priv;
+	struct pl180_mmc_host *host = dev->priv;
 	u32 sdi_clkcr;
 
 	sdi_clkcr = readl(&host->base->clock);
@@ -298,15 +323,24 @@ static void host_set_ios(struct mmc *dev)
 	/* Ramp up the clock rate */
 	if (dev->clock) {
 		u32 clkdiv = 0;
+		u32 tmp_clock;
 
-		if (dev->clock >= dev->f_max)
+		debug("setting clock and bus width in the host:");
+		if (dev->clock >= dev->f_max) {
+			clkdiv = 0;
 			dev->clock = dev->f_max;
-
-		clkdiv = ((ARM_MCLK / dev->clock) / 2) - 1;
-
+		} else {
+			clkdiv = (host->clock_in / dev->clock) - 2;
+		}
+		tmp_clock = host->clock_in / (clkdiv + 2);
+		while (tmp_clock > dev->clock) {
+			clkdiv++;
+			tmp_clock = host->clock_in / (clkdiv + 2);
+		}
 		if (clkdiv > SDI_CLKCR_CLKDIV_MASK)
 			clkdiv = SDI_CLKCR_CLKDIV_MASK;
-
+		tmp_clock = host->clock_in / (clkdiv + 2);
+		dev->clock = tmp_clock;
 		sdi_clkcr &= ~(SDI_CLKCR_CLKDIV_MASK);
 		sdi_clkcr |= clkdiv;
 	}
@@ -322,6 +356,9 @@ static void host_set_ios(struct mmc *dev)
 		case 4:
 			buswidth |= SDI_CLKCR_WIDBUS_4;
 			break;
+		case 8:
+			buswidth |= SDI_CLKCR_WIDBUS_8;
+			break;
 		default:
 			printf("Invalid bus width\n");
 			break;
@@ -334,96 +371,41 @@ static void host_set_ios(struct mmc *dev)
 	udelay(CLK_CHANGE_DELAY);
 }
 
-struct mmc *alloc_mmc_struct(void)
-{
-	struct mmc_host *host = NULL;
-	struct mmc *mmc_device = NULL;
-
-	host = malloc(sizeof(struct mmc_host));
-	if (!host)
-		return NULL;
-
-	mmc_device = malloc(sizeof(struct mmc));
-	if (!mmc_device)
-		goto err;
-
-	mmc_device->priv = host;
-	return mmc_device;
-
-err:
-	free(host);
-	return NULL;
-}
-
 /*
  * mmc_host_init - initialize the mmc controller.
  * Set initial clock and power for mmc slot.
  * Initialize mmc struct and register with mmc framework.
  */
-static int arm_pl180_mmci_host_init(int index, struct mmc *dev)
+int arm_pl180_mmci_init(struct pl180_mmc_host *host)
 {
-	struct mmc_host *host = dev->priv;
+	struct mmc *dev;
 	u32 sdi_u32;
 
-	switch (index) {
-#ifdef CONFIG_ARM_PL180_MMCI_BASE0
-	case 0:
-		host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE0;
-		break;
-#endif
-#ifdef CONFIG_ARM_PL180_MMCI_BASE1
-	case 1:
-		host->base = (struct sdi_registers *)CONFIG_ARM_PL180_MMCI_BASE1;
-		break;
-#endif
-	default:
-		printf("Bad index in %s\n", __FUNCTION__);
-		return 1;
-	}
+	dev = malloc(sizeof(struct mmc));
+	if (!dev)
+		return -ENOMEM;
 
-	/* Initially set power-on, full voltage & MMCI read */
-	sdi_u32 = INIT_PWR;
-	writel(sdi_u32, &host->base->power);
+	memset(dev, 0, sizeof(struct mmc));
+	dev->priv = host;
 
-	/* setting clk freq 505KHz */
-	sdi_u32 = SDI_CLKCR_CLKDIV_INIT | SDI_CLKCR_CLKEN;
-	writel(sdi_u32, &host->base->clock);
+	writel(host->pwr_init, &host->base->power);
+	writel(host->clkdiv_init, &host->base->clock);
 	udelay(CLK_CHANGE_DELAY);
 
 	/* Disable mmc interrupts */
 	sdi_u32 = readl(&host->base->mask0) & ~SDI_MASK0_MASK;
 	writel(sdi_u32, &host->base->mask0);
 
-	sprintf(dev->name, "MMC");
-	dev->clock = ARM_MCLK / (2 * (SDI_CLKCR_CLKDIV_INIT + 1));
+	strncpy(dev->name, host->name, sizeof(dev->name));
 	dev->send_cmd = host_request;
 	dev->set_ios = host_set_ios;
 	dev->init = mmc_host_reset;
 	dev->getcd = NULL;
-	dev->host_caps = 0;
-	dev->voltages = VOLTAGE_WINDOW_MMC;
-	dev->f_min = dev->clock;
-	dev->f_max = CONFIG_ARM_PL180_MMCI_CLOCK_FREQ;
-
-	return 0;
-}
-
-int arm_pl180_mmci_init(int index)
-{
-	int error;
-	struct mmc *dev;
-
-	dev = alloc_mmc_struct();
-	if (!dev)
-		return -1;
-
-	error = arm_pl180_mmci_host_init(index, dev);
-	if (error) {
-		printf("mmci_host_init index %d error - %d\n", index, error);
-		return -1;
-	}
-
-	dev->b_max = 0;
+	dev->host_caps = host->caps;
+	dev->voltages = host->voltages;
+	dev->f_min = host->clock_min;
+	dev->f_max = host->clock_max;
+	dev->b_max = host->b_max;
 
 	mmc_register(dev);
 	debug("registered mmc interface number is:%d\n", dev->block_dev.dev);
