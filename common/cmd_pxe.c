@@ -631,6 +631,7 @@ enum token_type {
 	T_TIMEOUT,
 	T_LABEL,
 	T_KERNEL,
+	T_LINUX,
 	T_APPEND,
 	T_INITRD,
 	T_LOCALBOOT,
@@ -659,6 +660,7 @@ static const struct token keywords[] = {
 	{"prompt", T_PROMPT},
 	{"label", T_LABEL},
 	{"kernel", T_KERNEL},
+	{"linux", T_LINUX},
 	{"localboot", T_LOCALBOOT},
 	{"append", T_APPEND},
 	{"initrd", T_INITRD},
@@ -1027,6 +1029,7 @@ static int parse_label(char **c, struct pxe_menu *cfg)
 			break;
 
 		case T_KERNEL:
+		case T_LINUX:
 			err = parse_sliteral(c, &label->kernel);
 			break;
 
