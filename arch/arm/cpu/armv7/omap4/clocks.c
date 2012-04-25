@@ -355,7 +355,6 @@ void enable_basic_clocks(void)
 		&prcm->cm_l4per_gptimer2_clkctrl,
 		&prcm->cm_wkup_wdtimer2_clkctrl,
 		&prcm->cm_l4per_uart3_clkctrl,
-		&prcm->cm_l3init_fsusb_clkctrl,
 		&prcm->cm_l3init_hsusbhost_clkctrl,
 		0
 	};
@@ -482,7 +481,6 @@ void enable_non_essential_clocks(void)
 		&prcm->cm_dss_dss_clkctrl,
 		&prcm->cm_sgx_sgx_clkctrl,
 		&prcm->cm_l3init_hsusbhost_clkctrl,
-		&prcm->cm_l3init_fsusb_clkctrl,
 		0
 	};
 
