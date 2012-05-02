@@ -117,7 +117,7 @@ char *usbd_device_status[] = {
 
 /* Descriptor support functions ************************************************************** */
 
-unsigned char *usb_string_NA = "\010\003N\000/\000A\000";
+char *usb_string_NA = "\010\003N\000/\000A\000";
 
 /**
  * usbd_get_string - find and return a string descriptor
@@ -588,7 +588,6 @@ struct urb *usbd_alloc_urb (struct usb_device_instance *device,
  */
 void usbd_dealloc_urb (struct urb *urb)
 {
-	serial_printf("udu %x\n", urb);
 	if (urb) {
 		free (urb);
 	}
