@@ -202,7 +202,7 @@ static struct usb_endpoint_instance endpoint_instance[NUM_ENDPOINTS + 1];
 extern char version_string[];
 
 struct priv_data {
-        unsigned long transfer_buffer;
+        void *transfer_buffer;
         int transfer_buffer_size;
 	char *serial_no;
 	int flag;
@@ -219,7 +219,7 @@ struct priv_data {
 
 static struct priv_data priv =
 {
-        .transfer_buffer       = CONFIG_DSUBOOT_TRANSFER_BUFFER,
+        .transfer_buffer       = (void *)CONFIG_DSUBOOT_TRANSFER_BUFFER,
         .transfer_buffer_size  = CONFIG_DSUBOOT_TRANSFER_BUFFER_SIZE,
 };
 
@@ -486,7 +486,7 @@ static int dsubt_dsuboot_init(void)
 	priv.d_size = 0;
 	priv.exit = 0;
 	priv.serial_no = (char *)"00123";
-	priv.product_name = DSUBOOT_PRODUCT_NAME;
+	priv.product_name = (unsigned char *)DSUBOOT_PRODUCT_NAME;
 	priv.bs = 1024;
 	return 0;
 }
@@ -621,14 +621,14 @@ static int dsubt_handle_response(void)
 	return 0;
 }
 
-void *dsudownload(u32 *loadaddr, u32 *loadsize)
+int dsudownload(u32 *loadaddr, u32 *loadsize)
 {
 	printf("booting from usb peripheral port\n");
 	dsubt_dsuboot_init();
 	dsubt_init_endpoint_ptrs();
 	if (udc_init() < 0) {
 		DSUBTERR("%s: MUSB UDC init failure\n", __func__);
-		return;
+		return -1;
 	}
 	dsubt_init_strings();
 	dsubt_init_instances();
@@ -651,7 +651,7 @@ void *dsudownload(u32 *loadaddr, u32 *loadsize)
 		}
 	}
 
-	*loadaddr = priv.transfer_buffer;
+	*loadaddr = (u32)priv.transfer_buffer;
 	*loadsize = priv.d_bytes;
 	return 0;
 }
