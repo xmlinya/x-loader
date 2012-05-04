@@ -81,12 +81,10 @@ int cleanup_before_linux(void)
 	 */
 	invalidate_dcache_all();
 #ifdef CONFIG_U8500
-	/* Clean l2 */
-	*((volatile unsigned int *)(0xA04127BC)) = 0xFF;
-	while (*((volatile unsigned int *)(0xA04127BC)) & 0xFF);
-	/* Invalidate l2 */
-	*((volatile unsigned int *)(0xA041277C)) = 0xFF;
-	while (*((volatile unsigned int *)(0xA041277C)) & 0xFF);
+    *((volatile unsigned int *)(0xA04127CC)) = 0xFF;
+    while (*((volatile unsigned int *)(0xA04127CC)) & 0xFF);
+    *((volatile unsigned int *)(0xA0412900)) = 0xFF;
+    *((volatile unsigned int *)(0xA0412904)) = 0xFF;
 #endif
 	return 0;
 }
