@@ -130,26 +130,32 @@
 
 #undef CONFIG_BOOTARGS
 #define CONFIG_BOOTCOMMAND \
-	"mmc rescan 0; mmc rescan 1; "					\
-		"if run loadbootscript; "				\
-		    "then run bootscript; "				\
-		"else "							\
-		    "if run mmcload; "					\
-		        "then run mmcboot; "				\
-		    "else "						\
-		        "if run emmcload; "				\
-		            "then run emmcboot; "			\
-			"else "						\
-			    "echo No media to boot from; "		\
-			"fi; "						\
-		    "fi; "						\
+	"mmc dev 1; "								\
+		"if run loadbootscript; "					\
+			"then run bootscript; "					\
+		"else "								\
+			"if run mmcload; "					\
+				"then run mmcboot; "				\
+			"else "							\
+				"mmc dev 0; "					\
+				"if run emmcloadbootscript; "			\
+					"then run bootscript; "			\
+				"else "						\
+					"if run emmcload; "			\
+						"then run emmcboot; "		\
+					"else "					\
+						"echo No media to boot from; "	\
+					"fi; "					\
+				"fi; "						\
+			"fi; "							\
 		"fi; "
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"verify=n\0"							\
 	"loadaddr=0x00100000\0"						\
 	"console=ttyAMA2,115200n8\0"					\
-	"loadbootscript=fatload mmc 1:1 ${loadaddr} boot.scr\0"	\
+	"loadbootscript=fatload mmc 1:1 ${loadaddr} boot.scr\0"		\
+	"emmcloadbootscript=fatload mmc 0:2 ${loadaddr} boot.scr\0"	\
 	"bootscript=echo Running bootscript "				\
 		"from mmc ...; source ${loadaddr}\0"			\
 	"memargs256=mem=96M@0 mem_modem=32M@96M mem=32M@128M "		\
@@ -161,10 +167,10 @@
 		"hwmem=168M@M160M mem=48M@328M "			\
 		"mem_issw=1M@383M mem=640M@384M\0"			\
 	"memargs=setenv bootargs ${bootargs} ${memargs1024}\0"		\
-	"emmcload=fatload mmc 0:2 ${loadaddr} /uImage\0"		\
-	"mmcload=fatload mmc 1:1 ${loadaddr} /uImage\0"		\
+	"emmcload=fatload mmc 0:2 ${loadaddr} uImage\0"			\
+	"mmcload=fatload mmc 1:1 ${loadaddr} uImage\0"			\
 	"commonargs=setenv bootargs console=${console} "		\
-		"ip=dhcp vmalloc=256M\0"				\
+	"vmalloc=300M\0"						\
 	"emmcargs=setenv bootargs ${bootargs} "				\
 		"root=/dev/mmcblk0p3 "					\
 		"rootwait\0"						\
@@ -179,6 +185,7 @@
 	"mmcboot=echo Booting from external MMC ...; "			\
 		"run commonargs mmcargs memargs; "			\
 		"bootm ${loadaddr}\0"					\
+	"fdt_high=0x2BC00000"						\
 	"stdout=serial,usbtty\0"					\
 	"stdin=serial,usbtty\0"						\
 	"stderr=serial,usbtty\0"
