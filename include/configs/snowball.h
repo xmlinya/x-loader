@@ -65,12 +65,13 @@
 #define CONFIG_ENV_SIZE		(128*1024)
 #define CONFIG_SYS_MALLOC_LEN	(CONFIG_ENV_SIZE + 256*1024)
 #endif
+
 #define CONFIG_SYS_GBL_DATA_SIZE	128	/* for initial data */
 
-//#define CONFIG_ENV_IS_IN_MMC
-#define CONFIG_ENV_IS_NOWHERE
+#define CONFIG_ENV_IS_IN_MMC
 #define CONFIG_CMD_ENV
-#define CONFIG_ENV_OFFSET              0x13F80000
+#define CONFIG_CMD_SAVEENV
+#define CONFIG_ENV_OFFSET		0x0118000
 #define CONFIG_SYS_MMC_ENV_DEV          0              /* SLOT2: eMMC */
 
 /*
