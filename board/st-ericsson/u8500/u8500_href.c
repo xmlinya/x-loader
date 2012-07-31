@@ -26,8 +26,8 @@
 #include <asm/arch/gpio.h>
 #include <asm/arch/hardware.h>
 #include <asm/arch/sys_proto.h>
-#ifdef CONFIG_MMC
 #include <asm/arch/prcmu.h>
+#ifdef CONFIG_MMC
 #include "../../../drivers/mmc/arm_pl180_mmci.h"
 #endif
 
