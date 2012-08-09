@@ -43,6 +43,10 @@
 #include <linux/ctype.h>
 #include <menu.h>
 
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+#include "../net/magic.h"
+#endif
+
 #if defined(CONFIG_SILENT_CONSOLE) || defined(CONFIG_POST) || defined(CONFIG_CMDLINE_EDITING)
 DECLARE_GLOBAL_DATA_PTR;
 #endif
@@ -470,6 +474,13 @@ void init_cmd_timeout(void)
  */
 void reset_cmd_timeout(void)
 {
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+	char *pxe_reboot_time = getenv(PXE_REBOOT_TIME);
+
+	if (pxe_reboot_time && *pxe_reboot_time) {
+		retry_time = atoi(pxe_reboot_time);
+	}
+#endif
 	endtime = endtick(retry_time);
 }
 #endif

@@ -23,6 +23,9 @@
 #include <linux/list.h>
 
 #include "menu.h"
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+#include "../net/magic.h"
+#endif
 
 #define MAX_TFTP_PATH_LEN 127
 
@@ -93,22 +96,42 @@ static int format_mac_pxe(char *outbuf, size_t outbuf_len)
 	return 1;
 }
 
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+/*
+ * Returns the directory the file specified in the bootfile env variable is
+ * in, unless DHCP MAGIC was received and we have a PathPrefix value, in which
+ * case the bootenv (if it was specified) is overridden. If bootfile
+ * isn't defined in the environment or obtained from PathPrefix DHCP
+ * vendor extension, return NULL, which should be interpreted as
+ * "don't prepend anything to paths".
+ */
+#else
 /*
  * Returns the directory the file specified in the bootfile env variable is
  * in. If bootfile isn't defined in the environment, return NULL, which should
  * be interpreted as "don't prepend anything to paths".
  */
+#endif
 static int get_bootfile_path(const char *file_path, char *bootfile_path,
 			     size_t bootfile_path_size)
 {
 	char *bootfile, *last_slash;
 	size_t path_len = 0;
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+	char *path_prefix = getenv(PXE_PATH_PREFIX);
+
+	/* Override the initial environment */
+	if (path_prefix) {
+		setenv("bootfile", path_prefix);
+	}
+#endif
+
+	bootfile = from_env("bootfile");
 
 	if (file_path[0] == '/')
 		goto ret;
 
 	bootfile = from_env("bootfile");
-
 	if (!bootfile)
 		goto ret;
 
@@ -277,6 +300,25 @@ static int get_pxelinux_path(char *file, void *pxefile_addr_r)
 	return get_pxe_file(path, pxefile_addr_r);
 }
 
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+/*
+ * Attempt to load a config file obtained from DHCP vendor extension option
+ *
+ * Returns 1 on success or < 0 on error.
+ */
+static int pxe_dhcp_config_path(void *pxefile_addr_r)
+{
+	char *name   = getenv(PXE_CONFIG_FILE);
+	int   retval = -ENOENT;
+
+	if (name && *name) {
+		retval = get_pxelinux_path(name, pxefile_addr_r);
+	}
+
+	return  retval;
+}
+#endif
+
 /*
  * Looks for a pxe file with a name based on the pxeuuid environment variable.
  *
@@ -379,7 +421,12 @@ do_pxe_get(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	 * Keep trying paths until we successfully get a file we're looking
 	 * for.
 	 */
-	if (pxe_uuid_path((void *)pxefile_addr_r) > 0
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+	if (pxe_dhcp_config_path(pxefile_addr_r) > 0
+		|| pxe_uuid_path(pxefile_addr_r) > 0
+#else
+	if (pxe_uuid_path(pxefile_addr_r) > 0
+#endif
 		|| pxe_mac_path((void *)pxefile_addr_r) > 0
 		|| pxe_ipaddr_paths((void *)pxefile_addr_r) > 0
 		|| get_pxelinux_path("default", (void *)pxefile_addr_r) > 0) {
