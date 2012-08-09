@@ -86,7 +86,6 @@ u8 *__dhcp_vendorex_prep(u8 *e)
 		while (*ptr)
 			*e++ = *ptr++;
 	}
-
 	return e;
 }
 
@@ -96,6 +95,10 @@ u8 *__dhcp_vendorex_proc(u8 *popt)
 }
 u8 *dhcp_vendorex_prep(u8 *e) __attribute__((weak, alias("__dhcp_vendorex_prep")));
 u8 *dhcp_vendorex_proc(u8 *e) __attribute__((weak, alias("__dhcp_vendorex_proc")));
+
+#if defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+# include "../net/magic.h"
+#endif
 #endif
 #endif
 
@@ -757,6 +760,9 @@ static void DhcpOptionsProcess (uchar * popt, Bootp_t *bp)
 	int *to_ptr;
 #endif
 
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+	dhcp_vendorex_opts_done();
+#endif
 	while (popt < end && *popt != 0xff) {
 		oplen = *(popt + 1);
 		switch (*popt) {
@@ -848,6 +854,9 @@ static void DhcpOptionsProcess (uchar * popt, Bootp_t *bp)
 		}
 		popt += oplen + 2;	/* Process next option */
 	}
+#if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
+	dhcp_vendorex_opts_done();
+#endif
 }
 
 static int DhcpMessageType(unsigned char *popt)

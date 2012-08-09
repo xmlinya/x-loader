@@ -60,6 +60,8 @@
 #define CONFIG_BOOTP_PXE
 #define CONFIG_BOOTP_PXE_CLIENTARCH	0x100
 #define CONFIG_BOOTP_VCI_STRING		"U-boot.armv7.highbank"
+#define CONFIG_BOOTP_VENDOREX
+#define CONFIG_BOOTP_VENDOREX_PXE_SHARED
 
 /*
  * Command line configuration.
