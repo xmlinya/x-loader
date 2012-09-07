@@ -253,6 +253,14 @@ int board_late_init(void)
 	if ((raise_ab8500_gpio16() < 0))
 		printf("error: cant' raise GPIO16\n");
 
+	/* Without usb-serial cable plugged at this
+	 * stage, some garbage is seen in RX FIFO
+	 * So, make sure we empty UART RX FIFO before
+	 * we proceed further
+	 */
+	while (tstc())
+		(void) getc();
+
 	return 0;
 }
 
