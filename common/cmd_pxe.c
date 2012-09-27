@@ -422,10 +422,10 @@ do_pxe_get(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	 * for.
 	 */
 #if defined(CONFIG_BOOTP_VENDOREX) && defined(CONFIG_BOOTP_VENDOREX_PXE_SHARED)
-	if (pxe_dhcp_config_path(pxefile_addr_r) > 0
-		|| pxe_uuid_path(pxefile_addr_r) > 0
+	if (pxe_dhcp_config_path((void *)pxefile_addr_r) > 0
+		|| pxe_uuid_path((void *)pxefile_addr_r) > 0
 #else
-	if (pxe_uuid_path(pxefile_addr_r) > 0
+	if (pxe_uuid_path((void *)pxefile_addr_r) > 0
 #endif
 		|| pxe_mac_path((void *)pxefile_addr_r) > 0
 		|| pxe_ipaddr_paths((void *)pxefile_addr_r) > 0
